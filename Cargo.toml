@@ -19,8 +19,13 @@ termimad = "0.31"
 tokio = { version = "1", features = ["full"] }
 toml = "0.8"
 
+# `async-secret-service` keeps the whole stack pure Rust (zbus, no libdbus),
+# which is what makes static musl builds and bare CI runners work. The
+# blocking keyring API still works through zbus::blocking, but zbus must use
+# its `async-io` executor: the `tokio` feature would block_on a nested tokio
+# runtime and panic inside our own #[tokio::main].
 [target.'cfg(target_os = "linux")'.dependencies]
-keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
+keyring = { version = "3", features = ["async-secret-service", "async-io", "crypto-rust"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { version = "3", features = ["apple-native"] }
@@ -29,7 +34,7 @@ keyring = { version = "3", features = ["apple-native"] }
 keyring = { version = "3", features = ["windows-native"] }
 
 [target.'cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))'.dependencies]
-keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
+keyring = { version = "3", features = ["async-secret-service", "async-io", "crypto-rust"] }
 
 # Static musl builds (release artifacts) vendor OpenSSL so the binaries are
 # fully self-contained. glibc builds use the system OpenSSL.

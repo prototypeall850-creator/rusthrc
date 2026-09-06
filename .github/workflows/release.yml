@@ -31,7 +31,7 @@ jobs:
         if: matrix.use-zig
         uses: mlugg/setup-zig@v1
         with:
-          zig-version: 0.13.0
+          version: 0.13.0
 
       - name: Install cargo-zigbuild (musl targets)
         if: matrix.use-zig
