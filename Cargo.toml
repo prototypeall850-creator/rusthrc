@@ -1,0 +1,37 @@
+[package]
+name = "rusthrc"
+version = "0.1.0"
+edition = "2021"
+description = "AI terminal assistant that turns natural language into shell commands (Codex CLI style)"
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+arboard = "3"
+async-openai = "0.27"
+clap = { version = "4.5", features = ["derive"] }
+colored = "3"
+dirs = "6"
+inquire = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+termimad = "0.31"
+tokio = { version = "1", features = ["full"] }
+toml = "0.8"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
+
+[target.'cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))'.dependencies]
+keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
+
+# Static musl builds (release artifacts) vendor OpenSSL so the binaries are
+# fully self-contained. glibc builds use the system OpenSSL.
+[target.'cfg(target_env = "musl")'.dependencies]
+openssl-sys = { version = "0.9", features = ["vendored"] }

@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl, use-zig: true }
+          - { os: ubuntu-latest, target: aarch64-unknown-linux-musl, use-zig: true }
+          - { os: macos-latest, target: aarch64-apple-darwin }
+          - { os: macos-latest, target: x86_64-apple-darwin }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install zig (for cargo-zigbuild musl builds)
+        if: matrix.use-zig
+        uses: mlugg/setup-zig@v1
+        with:
+          zig-version: 0.13.0
+
+      - name: Install cargo-zigbuild (musl targets)
+        if: matrix.use-zig
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ matrix.use-zig }}" = "true" ]; then
+            cargo zigbuild --release --target ${{ matrix.target }} --locked
+          else
+            cargo build --release --target ${{ matrix.target }} --locked
+          fi
+
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NAME="rusthrc-${VERSION}-${{ matrix.target }}"
+          mkdir "$NAME"
+          cp "target/${{ matrix.target }}/release/rusthrc" "$NAME/"
+          cp README.md LICENSE "$NAME/"
+          tar czf "$NAME.tar.gz" "$NAME"
+          sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256"
+
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $Version = "${{ github.ref_name }}".TrimStart("v")
+          $Name = "rusthrc-$Version-${{ matrix.target }}"
+          New-Item -ItemType Directory $Name | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/rusthrc.exe" "$Name/"
+          Copy-Item README.md, LICENSE "$Name/"
+          Compress-Archive -Path $Name -DestinationPath "$Name.zip"
+          $hash = (Get-FileHash "$Name.zip" -Algorithm SHA256).Hash.ToLower()
+          Set-Content -Path "$Name.zip.sha256" -Value "$hash  $Name.zip" -NoNewline
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            rusthrc-*.tar.gz
+            rusthrc-*.tar.gz.sha256
+            rusthrc-*.zip
+            rusthrc-*.zip.sha256
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/* \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            --verify-tag
