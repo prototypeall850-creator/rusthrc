@@ -97,7 +97,7 @@ install_prebuilt() {
 
   log "downloading $ASSET…"
   fetch "$URL" "$TMP/$ASSET" || err "download failed: $URL"
-  if fetch "$URL.sha256" "$TMP/$ASSET.sha256" 2>/dev/null; then
+  if fetch "$URL.sha256" "$TMP/$ASSET.sha256" 2>/dev/null && [ -s "$TMP/$ASSET.sha256" ]; then
     expected=$(cut -d' ' -f1 "$TMP/$ASSET.sha256" | tr -d '[:space:]')
     actual=$(sha256_of "$TMP/$ASSET")
     [ "$expected" = "$actual" ] || err "checksum mismatch for $ASSET"
