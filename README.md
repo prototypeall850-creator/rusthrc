@@ -1,32 +1,31 @@
 # rusthrc
 
-AI-powered terminal assistant — turns natural language into shell commands.
-A locally executed CLI inspired by the OpenAI Codex CLI, written in Rust.
+Asisten terminal bertenaga AI — mengubah bahasa natural menjadi perintah shell.
+CLI yang dieksekusi secara lokal, terinspirasi OpenAI Codex CLI, ditulis dengan Rust.
 
-Describe what you want in plain English (or Indonesian) and rusthrc drafts the
-shell command for you: review it, run it, copy it, or ask for a revision.
-**It never executes anything without your explicit approval.**
+Cukup jelaskan keinginan Anda dalam bahasa Indonesia (atau Inggris), rusthrc akan
+menyusun perintah shell-nya: tinjau, jalankan, salin, atau minta revisi.
+**Tidak pernah mengeksekusi apa pun tanpa persetujuan eksplisit Anda.**
 
-## Features
+## Fitur
 
-- **Natural language → shell** — `rusthrc "<prompt>"` translates English or
-  Indonesian requests into a command for your OS and shell.
-- **Interactive execution menu** — after generating a command you get
-  `Run / Copy to clipboard / Revise / Cancel`; blind execution never happens.
-- **Context awareness** — detects OS, distribution, architecture, shell and the
-  working directory (including its top-level entries) and feeds all of it to
-  the model.
-- **Pipe / headless mode** — read the prompt from stdin and emit a bare command
-  or JSON, for scripts and editor extensions.
-- **Secure auth** — the API key lives in the OS credential manager (GNOME
-  Keyring / KDE Wallet / macOS Keychain / Windows Credential Manager) via
-  `keyring`, with a chmod-600 file fallback for headless machines.
-- **OpenAI-compatible endpoints** — works with OpenAI, Ollama, LM Studio,
-  llama.cpp server, vLLM, and friends (`--base-url`).
+- **Bahasa natural → shell** — `rusthrc "<prompt>"` menerjemahkan permintaan dalam
+  bahasa Indonesia atau Inggris menjadi perintah yang sesuai dengan OS dan shell Anda.
+- **Menu eksekusi interaktif** — setelah perintah dibuat, Anda mendapat pilihan
+  `Run / Copy to clipboard / Revise / Cancel`; tidak ada eksekusi buta.
+- **Sadar konteks** — mendeteksi OS, distro, arsitektur, shell, dan working directory
+  (termasuk isinya), lalu memberikan semuanya sebagai konteks ke model.
+- **Mode pipe/headless** — membaca prompt dari stdin dan mengeluarkan perintah polos
+  atau JSON, cocok untuk skrip dan ekstensi editor.
+- **Auth yang aman** — API key disimpan di credential manager OS (GNOME Keyring /
+  KDE Wallet / macOS Keychain / Windows Credential Manager) via `keyring`, dengan
+  fallback file chmod-600 untuk mesin headless.
+- **Endpoint kompatibel-OpenAI** — mendukung OpenAI, Ollama, LM Studio, llama.cpp
+  server, vLLM, dan lainnya (`--base-url`).
 
 ## Install
 
-**macOS / Linux** (and Termux, which builds from source automatically):
+**macOS / Linux** (dan Termux, yang otomatis build dari source):
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/main/install.sh | bash
@@ -38,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/mai
 irm https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/main/install.ps1 | iex
 ```
 
-Pin a specific version instead of the latest release:
+Mengunci versi tertentu, bukan rilis terbaru:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/main/install.sh | bash -s -- v0.1.0
@@ -48,16 +47,15 @@ curl -fsSL https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/mai
 $env:RUSTHRC_VERSION = "v0.1.0"; irm https://raw.githubusercontent.com/prototypeall850-creator/rusthrc/main/install.ps1 | iex
 ```
 
-Release archives are published per target
-(`x86_64`/`aarch64` Linux musl static, `x86_64`/`aarch64` macOS,
-`x86_64` Windows) with SHA-256 checksums that the installers verify.
-Or with cargo, from anywhere:
+Arsip rilis diterbitkan per target (`x86_64`/`aarch64` Linux musl statis,
+`x86_64`/`aarch64` macOS, `x86_64` Windows) lengkap dengan checksum SHA-256 yang
+diverifikasi oleh installer. Atau dengan cargo, dari mana saja:
 
 ```sh
 cargo install --git https://github.com/prototypeall850-creator/rusthrc --locked
 ```
 
-## Usage
+## Pemakaian
 
 ```sh
 rusthrc "list all hidden files"
@@ -76,25 +74,25 @@ rusthrc "carikan file yang paling besar di folder ini"
   Cancel
 ```
 
-- **Run** — executes through your shell (`$SHELL -c`), streams output live,
-  and propagates the exit code.
-- **Copy** — puts the command on the system clipboard.
-- **Revise** — type a follow-up ("also include subfolders") and the model
-  regenerates the command with the full conversation as context.
+- **Run** — mengeksekusi lewat shell Anda (`$SHELL -c`), menampilkan output secara
+  live, dan mewariskan kode exit perintah tersebut.
+- **Copy** — menyalin perintah ke clipboard sistem.
+- **Revise** — tulis instruksi lanjutan ("sertakan juga subfolder") dan model akan
+  membuat ulang perintah dengan seluruh riwayat percakapan sebagai konteks.
 
-Suspect commands (`sudo`, `rm -rf`, `dd if=`, piping `curl` into `sh`, …) are
-flagged with a warning before the menu.
+Perintah yang berisiko (`sudo`, `rm -rf`, `dd if=`, mem-pipe `curl` ke `sh`, dll.)
+ditandai dengan peringatan sebelum menu muncul.
 
-### Headless mode
+### Mode headless
 
-When stdin or stdout is not a TTY — or you pass an explicit flag — rusthrc
-skips the interactive menu:
+Saat stdin atau stdout bukan TTY — atau Anda memakai flag eksplisit — rusthrc
+melewatkan menu interaktif:
 
 ```sh
-# bare command on stdout, diagnostics on stderr
+# perintah polos di stdout, diagnostik di stderr
 rusthrc --print "create a virtualenv here"
 
-# structured JSON for scripts and extensions
+# JSON terstruktur untuk skrip dan ekstensi
 echo "archive this folder" | rusthrc --json
 ```
 
@@ -113,51 +111,50 @@ echo "archive this folder" | rusthrc --json
 }
 ```
 
-If the model replies without a command (e.g. it asks a clarifying question),
-`--print` reports it on stderr and exits `1`; `--json` returns
-`"command": null` with the explanation.
+Jika model membalas tanpa perintah (misalnya mengajukan pertanyaan klarifikasi),
+`--print` melaporkannya ke stderr dan keluar dengan kode `1`; `--json` mengembalikan
+`"command": null` beserta penjelasannya.
 
-## Authentication & configuration
+## Autentikasi & konfigurasi
 
 ```sh
-rusthrc login                    # prompts securely, stores in the OS keyring
-rusthrc login sk-... --store file  # fallback: config file (chmod 600)
-rusthrc logout                   # removes the key from every store
+rusthrc login                      # prompt aman, simpan di OS keyring
+rusthrc login sk-... --store file  # fallback: file config (chmod 600)
+rusthrc logout                     # hapus key dari semua tempat penyimpanan
 
-rusthrc config set-key sk-...    # same as login
+rusthrc config set-key sk-...      # sama dengan login
 rusthrc config set-model gpt-4o-mini
 rusthrc config set-base-url http://localhost:11434/v1
-rusthrc config show              # config + detected environment
+rusthrc config show                # config + environment yang terdeteksi
 ```
 
-The key is resolved in this order: `OPENAI_API_KEY` env var → OS keyring
-(service `rusthrc`, account `openai-api-key`) → config file.
-Config lives at `~/.config/rusthrc/config.toml` (XDG on Linux, equivalent
-paths on macOS/Windows).
+API key dicari dengan urutan: variabel lingkungan `OPENAI_API_KEY` → OS keyring
+(service `rusthrc`, account `openai-api-key`) → file config. File config berada di
+`~/.config/rusthrc/config.toml` (XDG di Linux, jalur setara di macOS/Windows).
 
-Per-invocation overrides: `--model <MODEL>` and `--base-url <URL>`.
+Override per pemanggilan: `--model <MODEL>` dan `--base-url <URL>`.
 
-## Development
+## Pengembangan
 
 ```sh
-cargo build        # debug build
-cargo test         # unit tests (response parsing, risk heuristics)
+cargo build        # build debug
+cargo test         # unit test (parsing respons, heuristik risiko)
 cargo run -- "list files"
-python3 tests/e2e_mock.py   # full E2E suite against a mock OpenAI server
+python3 tests/e2e_mock.py   # suite E2E penuh terhadap mock server OpenAI
 ```
 
-Module layout:
+Struktur modul:
 
-| Module          | Responsibility                                            |
-| --------------- | --------------------------------------------------------- |
-| `src/cli.rs`    | clap router: root prompt command, `login`, `config`        |
-| `src/env.rs`    | environment sniffer: OS, distro, shell, cwd context        |
-| `src/llm.rs`    | system prompt, OpenAI request, response/code-block parsing |
-| `src/exec.rs`   | execution sandbox + dangerous-command heuristics           |
-| `src/config.rs` | config file + keyring/file/env key storage                 |
-| `src/render.rs` | terminal panels, statuses, markdown rendering              |
-| `src/app.rs`    | main flow: prompt → LLM → menu loop → run/copy/revise      |
+| Modul          | Tanggung jawab                                              |
+| -------------- | ----------------------------------------------------------- |
+| `src/cli.rs`   | router clap: perintah prompt utama, `login`, `config`        |
+| `src/env.rs`   | environment sniffer: OS, distro, shell, konteks cwd          |
+| `src/llm.rs`   | system prompt, request OpenAI, parsing respons/code block    |
+| `src/exec.rs`  | eksekusi perintah + heuristik deteksi perintah berbahaya     |
+| `src/config.rs`| file config + penyimpanan key (keyring/file/env)             |
+| `src/render.rs`| panel terminal, status, rendering markdown                   |
+| `src/app.rs`   | alur utama: prompt → LLM → loop menu → run/copy/revise       |
 
-## License
+## Lisensi
 
 MIT
